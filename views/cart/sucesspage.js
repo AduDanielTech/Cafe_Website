@@ -1,5 +1,5 @@
 const  layout = require('../layout')
-module.exports = ({msg}) => {
+module.exports = ({msg,redirect,redirect_link}) => {
     return layout({
         content :`
         <div class="response"> 
@@ -10,7 +10,7 @@ module.exports = ({msg}) => {
         <div>
         <h1>Sucess</h1> 
         <p>${msg}</p>
-        <a href="/menu">Back to Menu</a>
+        <a href="${redirect_link}">Back to ${redirect}</a>
         </div>
        
         </div>

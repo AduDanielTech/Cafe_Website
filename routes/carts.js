@@ -1,14 +1,33 @@
 const express = require('express')
+const { spawn } = require('child_process');
+
 const cartsRepo = require('../repositories/carts')
 const productsRepo = require('../repositories/products')
 const ordersRepo = require('../repositories/orders')
+
 const cartShowTemplate = require('../views/cart/show')
 const checkoutOverlayTemplate = require('../views/cart/debitCardOverlay')
+const fom = require('../views/cart/fom')
 const sucessTemplate = require('../views/cart/sucesspage')
 const failureTemplate = require('../views/cart/failurepage')
+
 const toastModule = require('../views/utilities/toasts')
-const sendemail = require('./utilities/sendemail')
+const runPythonEmailScript = require('./utilities/runPythonScript')
+const getRandomDate = require('./utilities/getRandomDate')
+
+
+
 const router = express.Router()
+// Helper function to execute Python script
+
+
+// Middleware to handle errors
+function errorHandler(err, req, res, next) {
+  console.error(err);
+  res.status(500).send('Internal Server Error');
+}
+
+router.use(errorHandler);
 
 router.post('/cart/products', async (req, res) => {
   try {
@@ -60,7 +79,7 @@ router.get('/cart', async (req, res) => {
     } else {
       cart = await cartsRepo.getOne(req.session.cartId);
     }
-  
+    
     if (!req.session.cartId) {
       return res.redirect('/');
     } 
@@ -68,18 +87,18 @@ router.get('/cart', async (req, res) => {
     for (let item of cart.items) {
       const product = await productsRepo.getOne(item.id);
       item.product = product;
-
+      
     }
-  
+    
     const totalPrice = cart.items.reduce((total, item) => {
       let quantity = item.product ? item.product.price * item.quantity : 0;
       total = total + quantity;
-
+      
       return parseFloat(total.toFixed(2))
     }, 0);
-  
+    
     await cartsRepo.update(cart.id, { total: totalPrice });
-  
+    
     res.send(cartShowTemplate({ items: cart.items, totalPrice }));
   } catch (err) {
     console.error(err);
@@ -94,18 +113,18 @@ router.post('/cart/deleteItem', async (req, res) => {
     if (!req.session.cartId) {
       return res.redirect('/');
     }
-
+    
     const cart = await cartsRepo.getOne(req.session.cartId);
     console.log('Before deletion:', cart); // Log the cart before deletion
-
+    
     const foundItem = cart.items.filter(item => req.body.productId !== item.id);
     console.log('Found items:', foundItem); // Log the items after filtering
-
+    
     cart.items = foundItem;
-
+    
     await cartsRepo.update(req.session.cartId, { items: cart.items });
     console.log('After deletion:', cart); // Log the cart after deletion
-
+    
     res.redirect('/cart')
   } catch (err) {
     console.error(err);
@@ -118,10 +137,10 @@ router.get('/cart/checkout', async (req, res) => {
     if (!req.session.cartId) {
       return res.redirect('/');
     }
-
+    
     const cart = await cartsRepo.getOne(req.session.cartId);
     const total = cart.total
-
+    
     res.send(checkoutOverlayTemplate({total:total}))
   } catch (err) {
     console.error(err);
@@ -129,53 +148,46 @@ router.get('/cart/checkout', async (req, res) => {
   }
 });
 
+
+let success = true;
+
 router.get('/cart/payment-response', async (req, res) => {
   try {
     if (!req.session.cartId) {
       return res.redirect('/');
     }
+
     const cart = await cartsRepo.getOne(req.session.cartId);
 
-    let success = true
-   
-    if(success) {
-    cart.items = []
-    await cartsRepo.update(req.session.cartId, { items: cart.items });
+    if (success) {
+      cart.items = [];
+      await cartsRepo.update(req.session.cartId, { items: cart.items });
 
-      res.send(sucessTemplate({msg:`We received your purchase request;<br/> we'll be in touch shortly!`}))
-    }else{
-       res.send(failureTemplate({msg: `Your purchase request failed;<br/> Please try again later`}))
+      res.send(successTemplate({ msg: `We received your purchase request;<br/> we'll be in touch shortly!`,redirect:'Menu',redirect_link:'/book'  }));
+    } else {
+      res.send(failureTemplate({ msg: `Your purchase request failed;<br/> Please try again later` }));
     }
+
+    // Reset the success variable for the next request
+    success = true;
   } catch (err) {
     res.status(500).send(err);
   }
 });
+
+
+
+
+
+
 router.post('/cart/payment', async (req, res) => {
   try {
     if (!req.session.cartId) {
       return res.redirect('/');
     }
-    
-    const {card_name,address, email} = req.body
+
+    const { card_name, address, email } = req.body;
     const cart = await cartsRepo.getOne(req.session.cartId);
-   
-
-   
-    
-
-   function getRandomDate() {
-  
-  const currentDate = new Date();
-  const currentDayOfMonth = currentDate.getDate();
-  const randomDayOffset = Math.floor(Math.random() * 7);
-  const randomDayOfMonth = currentDayOfMonth + randomDayOffset;
-  currentDate.setDate(randomDayOfMonth);
-  const day = currentDate.getDate();
-  const month = currentDate.getMonth() + 1; 
-  const year = currentDate.getFullYear();
-  const formattedDate = `${day}/${month}/${year}`;
-  return formattedDate;
-}
     const randomDay = getRandomDate();
 
     const virProduct = await Promise.all(
@@ -185,18 +197,16 @@ router.post('/cart/payment', async (req, res) => {
         return item;
       })
     );
-    const order ={
+
+    const order = {
       card_name,
       address,
       email,
-      product: virProduct.map((item) => `${item.product.title} => ${item.product.price}`)
-      .join('\n') ,
-      date:randomDay,
-      total:cart.total,
-    }
-    
-    let orders ;
-    
+      product: virProduct.map((item) => `${item.product.title} => ${item.product.price}`).join('\n'),
+      date: randomDay,
+      total: cart.total,
+    };
+    const orders = await ordersRepo.create({ order, user_order_id: req.session.cartId })
 
     const orderDetails = {
       card_name: order.card_name,
@@ -206,71 +216,59 @@ router.post('/cart/payment', async (req, res) => {
       date: order.date,
       total: order.total.toFixed(2),
     };
-    
-    orders = await ordersRepo.create({ order, user_order_id: req.session.cartId });
-    const message = `
-      ${orderDetails.card_name},
-    
-      Thank you for your order from CAFE. If you have questions about your order, you can email us at ${orderDetails.email}.
-    
-      Your shipping information is below, confirming the goods in person when receiving, non-quality issues will not be returned after unpacking. Thank you again for your patience.
-    
-      Your Shipment # for Order ${orders.id}
-    
-      Billing Info
-      - Card Name: ${orderDetails.card_name}
-      - Address: ${orderDetails.address}
-      - Email: ${orderDetails.email}
-      - Products: ${orderDetails.product}
-      - Date: ${orderDetails.date}
-      - Total: $${orderDetails.total}
-    `;
-    const htmlDocument = `
-    <!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Your CAFE order has shipped</title>
-</head>
-<body>
-  <h2>${orderDetails.card_name},</h2>
-  
-  <p>Thank you for your order from CAFE. If you have questions about your order, you can email us at ${orderDetails.email}.</p>
-  
-  <p>Your shipping information is below. Please confirm the goods in person when receiving. Non-quality issues will not be returned after unpacking. Thank you again for your patience.</p>
-  
-  <h3>Your Shipment # for Order ${orders.id}</h3>
-  
-  <h4>Billing Info</h4>
-  <ul>
-    <li><strong>Card Name:</strong> ${orderDetails.card_name}</li>
-    <li><strong>Address:</strong> ${orderDetails.address}</li>
-    <li><strong>Email:</strong> ${orderDetails.email}</li>
-    <li><strong>Products:</strong> ${orderDetails.product}</li>
-    <li><strong>Date:</strong> ${orderDetails.date}</li>
-    <li><strong>Total:</strong> $${orderDetails.total}</li>
-  </ul>
-</body>
-</html>
 
-    `
-    const subject= `Your CAFE order has shipped`
+    // Create an email data object
     const emailData = {
       email: orderDetails.email,
-      subject,
-      message,
-      html : htmlDocument,
+      subject: 'Your CAFE order has shipped',
+      message: `
+        ${orderDetails.card_name},
+        Thank you for your order from CAFE. If you have questions about your order, you can email us at ${orderDetails.email}.
+        Your shipping information is below, confirming the goods in person when receiving, non-quality issues will not be returned after unpacking. Thank you again for your patience.
+        Your Shipment # for Order ${orders.id}
+        Billing Info
+        - Card Name ${orderDetails.card_name}
+        - Address ${orderDetails.address}
+        - Email ${orderDetails.email}
+        - Products ${orderDetails.product}
+        - Date ${orderDetails.date}
+        - Total $${orderDetails.total}
+      `,
     };
- 
-    sendemail({email,subject,message})
-    await cartsRepo.update(req.session.cartId, { userCardDetails : req.body}).then()
-    return res.redirect('/cart/payment-response');
-   
+
+    // Convert the email data object to JSON string
+    const jsonString = JSON.stringify(emailData);
+    try {
+      // Call the Python helper function and handle the result
+      const pythonScriptResult = await runPythonEmailScript(jsonString);
+      console.log('Python script output:', pythonScriptResult);
+     
+    } catch (err) {
+     
+      console.error('Error executing Python script:', err);
+      success = false;
+     
+      res.redirect('/cart/payment-response');
+      return;
+    }
+
+      cartsRepo
+        .update(req.session.cartId, { userCardDetails: req.body })
+        .then(() => {
+          res.redirect('/cart/payment-response');
+        })
+        .catch((err) => {
+          console.error(err);
+          success = false;
+          res.redirect('/cart/payment-response');
+        });
+    
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error');
   }
-});
+}); 
+
 
 
 
