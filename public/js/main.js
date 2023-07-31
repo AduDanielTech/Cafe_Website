@@ -168,10 +168,10 @@
       url: '/cart/products',
       data: data, 
       success:async function(response) {
-        const {successToast, total} = response
+        const {successToast, quantity} = response
         await $('.toast-cont').html(successToast) 
         await $('.cart-link').append(``) 
-        await $('.cart-link').append(`<span class="noproduct bg-custom">${total}</span>`) 
+        await $('.cart-link').append(`<span class="noproduct bg-custom">${quantity}</span>`) 
         
        
         return toast()
@@ -181,12 +181,12 @@
       }
     });
   });  
-
+  
   $('.searchInput').keyup( function(event) {
     const formData = $('.searchInput').val()
     
     const data = { title: formData };
-  
+    console.log('jiii')
         $.ajax({        
       type: 'POST',
       url: '/search',
@@ -202,7 +202,7 @@
                 </h5>
                
                 <span>
-                <button id="id}"  class="add-to-cart text-custom" >
+                <button id="${item.id}"  class="add-to-cart text-custom"  >
                   <span  class="material-symbols-outlined ">
                   shopping_cart
                   </span>

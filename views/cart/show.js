@@ -1,6 +1,9 @@
 const layout = require('../layout');
 
 module.exports = ({ items, totalPrice }) => {
+  if (items[0] == 0){
+    totalPrice = 0
+  }
   const renderedItems = items
     .map(item => {
        const price = parseFloat((item.product.price * item.quantity).toFixed(2))
@@ -46,7 +49,7 @@ const empty = `
   return layout({
     content: `
     
-    ${totalPrice?
+    ${totalPrice == 0?
         `
           <section id="cart" class="pb-4">
       <div class="cart-cont">

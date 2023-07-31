@@ -1,11 +1,14 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const util = require('util');
-const Repository = require('./repository')
 
 const scrypt = util.promisify(crypto.scrypt);
 
-class UsersRepository extends Repository {
+
+
+const Repository = require('./firebaserepo');
+class UsersRepository extends Repository{
+
   async create(attrs) {
     attrs.id = this.randomId();
 
@@ -17,11 +20,10 @@ class UsersRepository extends Repository {
       ...attrs,
       password: `${buf.toString('hex')}.${salt}`
     };
-    records.push(record);
+    const newRecordRef = this.collectionRef.push(record);
+    const newRecordSnapshot = await newRecordRef.once('value');
+    return newRecordSnapshot.val();
 
-    await this.writeAll(records);
-
-    return record;
   }
   
   async comparePasswords(saved, supplied) {
@@ -32,7 +34,5 @@ class UsersRepository extends Repository {
 
     return hashed === hashedSuppliedBuf.toString('hex');
   }
-
 }
-
-module.exports = new UsersRepository('users.json');
+module.exports = new UsersRepository('users');
