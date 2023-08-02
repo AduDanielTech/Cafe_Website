@@ -156,6 +156,41 @@ module.exports = ({ content }) => {
         <script src="/lib/counterup/counterup.min.js"></script>
     
         <script src="/js/main.js"></script>
+        <script >
+        (function ($) {
+            "use strict";
+            function safeExecution(callback) {
+                try {
+                  callback();
+                } catch (error) {
+                  console.error(error);
+                  // Handle the error here, e.g., display an error message to the user or log it.
+                }
+              }
+              
+              $(document).ready(function() {
+                safeExecution(function() {
+                  // updating totoal to checkouty
+              
+                  // change quantity
+                  $('.change-quantity').change(function(e) {
+                    e.preventDefault();
+                    var changes = [];
+                    $('.change-quantity').each(function() {
+                      var productId = $(this).data('product-id');
+                      var quantity = $(this).val();
+                      console.log(quantity);
+                      changes.push({ productId, quantity });
+                    });
+                    $.post('/cart/change', { changes }, function(response) {
+                      location.reload();
+                    });
+                  });
+                });
+              });
+              
+        })(jQuery);        
+        </script>
     </body>
     </html>
     `;

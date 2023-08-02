@@ -162,7 +162,7 @@
  $('.add-to-cart').click( function(event) {
     const formData = event.target.parentElement.id
     const data = { productId: formData };
-
+  console.log('hi')
         $.ajax({        
       type: 'POST',
       url: '/cart/products',
@@ -196,18 +196,10 @@
         <div class="d-flex align-items-center pb-2">
             <img class="flex-shrink-0 img-fluid rounded" src="data:image/png;base64, ${item.image}" alt="" style="width: 80px;">
             <div class="w-100 d-flex flex-column text-start ps-4">
-                <h5 class="d-flex justify-content-between border-bottom pb-2">
-                    <span>${item.title}</span>
-                    <span class="text-custom">$${item.price}</span>
+                <h5  id="${item.id}" class="d-flex justify-content-between border-bottom pb-2">
+                    <span class="add-to-cart">${item.title}</span>
+                    <span class="text-custom add-to-cart">$${item.price}</span>
                 </h5>
-               
-                <span>
-                <button id="${item.id}"  class="add-to-cart text-custom"  >
-                  <span  class="material-symbols-outlined ">
-                  shopping_cart
-                  </span>
-                  </button>
-                
                 </span>
                 </small>
             </div>
@@ -288,25 +280,35 @@
    
 
   
+  function safeExecution(callback) {
+    try {
+      callback();
+    } catch (error) {
+      console.error(error);
+      // Handle the error here, e.g., display an error message to the user or log it.
+    }
+  }
+  
   $(document).ready(function() {
-    // updating totoal to checkouty
-   
-      
-    // change quantity
-    $('.change-quantity').change(function(e) {
+    safeExecution(function() {
+      // updating totoal to checkouty
+  
+      // change quantity
+      $('.change-quantity').change(function(e) {
         e.preventDefault();
         var changes = [];
         $('.change-quantity').each(function() {
-          var productId  = $(this).data('product-id');
+          var productId = $(this).data('product-id');
           var quantity = $(this).val();
+          console.log(quantity);
           changes.push({ productId, quantity });
         });
         $.post('/cart/change', { changes }, function(response) {
-            location.reload();
+          location.reload();
         });
       });
-
-   
+    });
   });
+  
 
 })(jQuery);

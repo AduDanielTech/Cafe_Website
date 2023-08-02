@@ -16,6 +16,13 @@ const toastModule = require('../views/utilities/toasts')
 const runPythonEmailScript = require('./utilities/runPythonScript')
 const getRandomDate = require('./utilities/getRandomDate');
 const generateUniqueCartId = require('./utilities/getRandomId');
+const {processWithSemaphore} = require('./utilities/manageRequestsHandling');
+const {
+  checkAndRemoveInvalidItems,
+  updateTotal,
+  getProductWithCaching,
+  errorHandler,} = require('./utilities/cartUtilities');
+
 const { log } = require('console');
 
 
@@ -24,76 +31,61 @@ const router = express.Router()
 
 
 
-
-
-function deleteItemById(jsonData) {
-  const updatedItems = jsonData.items.filter((item) => item.id !== null);
-  
-  const updatedJson = {
-    ...jsonData,
-    items: updatedItems,
-  };
-  return updatedJson;
-}
-
-
-function errorHandler(err, req, res, next) {
-  console.error(err);
-  res.status(500).send('Internal Server Error');
-}
 router.use(errorHandler);
 
-
-
-
-// In-memory cache for fetched products
-const productCache = new Map();
-
-// Function to fetch a product, with caching
-async function getProductWithCaching(productId) {
-  if (productCache.has(productId)) {
-    return productCache.get(productId);
-  }
-
-  try {
-    const product = await productsRepo.getOne(productId);
-    if (product) {
-      // Cache the product for 5 minutes (adjust the cache time as needed)
-      productCache.set(productId, product);
-      setTimeout(() => productCache.delete(productId), 5 * 60 * 1000);
-      return product;
-    }
-    return null;
-  } catch (err) {
-    console.error('Error fetching product:', err);
-    return null;
-  }
-}
-
-// Function to update the total price of the cart
-async function updateTotal(cartItems) {
-  let totalPrice = 0;
-
-  for (const item of cartItems) {
-    const product = await getProductWithCaching(item.id);
-
-    if (!product) {
-      // If the product is not found, skip to the next item
-      console.log('Product not found for item:', item);
-      continue;
-    }
-
-    totalPrice += item.quantity * product.price;
-  }
-
-  return parseFloat(totalPrice.toFixed(2));
-}
-
 router.post('/cart/products', async (req, res) => {
-  try {
-    const cartId = req.session.cartId || generateUniqueCartId();
-    let cart = await cartsRepo.getOne(cartId);
+  await processWithSemaphore(async () => {
+    try {
+      const cartId = req.session.cartId || generateUniqueCartId;
 
+      req.session.cartId = cartId
+      let cart = await cartsRepo.getOne(cartId);
+
+      if (!cart) {
+        cart = await cartsRepo.create({
+          items: [{ id: null, quantity: 0 }],
+          total: 0,
+          id: cartId,
+        });
+        console.log('Cart created');
+      }
+
+      if (!Array.isArray(cart.items)) {
+        cart.items = [];
+      }
+  
+      // Check if the product already exists in the cart
+      const existingItem = cart.items.find((item) => item?.id === req.body.productId);
+      if (existingItem) {
+        existingItem.quantity++;
+      } else {
+        cart.items.push({ id: req.body.productId, quantity: 1 });
+      }
+
+      cart.total = await updateTotal(cart.items);
+      console.log('Total price:', cart.total);
+      log('hi')
+      const successToast = toastModule.success({ message: 'Added To Cart' });
+      const quantity = cart.items.length;
+
+      res.send({ successToast, quantity });
+
+      await cartsRepo.update(cart.id, cart);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+});
+
+
+
+router.get('/cart', async (req, res) => {
+  
+  try {
+    const cartId = req.session.cartId || generateUniqueCartId
+    req.session.cartId = cartId
+    let cart = await cartsRepo.getOne(cartId);
     if (!cart) {
       cart = await cartsRepo.create({
         items: [{ id: null, quantity: 0 }],
@@ -102,22 +94,9 @@ router.post('/cart/products', async (req, res) => {
       });
       console.log('Cart created');
     }
-    const existingItem = cart.items.find((item) => item?.id === req.body.productId);
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.items.push({ id: req.body.productId, quantity: 1 });
-    }
-
+    checkAndRemoveInvalidItems(cart)
     cart.total = await updateTotal(cart.items);
-    console.log('Total price:', cart.total);
-
-    const successToast = toastModule.success({ message: 'Added To Cart' });
-    const quantity = cart.items.length;
-
-    res.send({ successToast, quantity });
-
-    // Move this line here to update the cart after sending the response
+    res.send(cartShowTemplate({ items: cart.items, totalPrice:cart.total }));
     await cartsRepo.update(cart.id, cart);
   } catch (err) {
     console.error(err);
@@ -126,87 +105,31 @@ router.post('/cart/products', async (req, res) => {
 });
 
 
-
-
-
-
-
-router.get('/cart', async (req, res) => {
-  try {
-    let cart;
-    if (!req.session.cartId) {
-      req.session.cartId = generateUniqueCartId;
-       cart = await cartsRepo.create({ items: [], total: 0,  id: req.session.cartId }); 
-       console.log(cart);
-       console.log(' cart created');
-    } else {
-      cart = await cartsRepo.getOne(req.session.cartId);
-      console.log(cart);
-      console.log('getone');
-    }
-    console.log(req.session.id)
-    if (!req.session.cartId) {
-      return res.redirect('/');
-    } 
-  
-    
-    if (cart.items[0] == 0){
-      cart.total=0
-      }
-    else {
-      for (let item of cart.items) {
-        const product = await productsRepo.getOne(item.id);
-        item.product = product;
-        
-      }
-      const totalPrice = cart.items.reduce((total, item) => {
-        let quantity = item.product ? item.product.price * item.quantity : 0;
-        total = total + quantity;
-        
-        return parseFloat(total.toFixed(2))
-      }, 0);
-      cart.total=totalPrice
-      await cartsRepo.update(cart.id, cart);
-      
-    }
-
-    res.send(cartShowTemplate({ items: cart.items, totalPrice }));
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-
-
 router.post('/cart/deleteItem', async (req, res) => {
-  try {
+  await processWithSemaphore(async () => { try {
     if (!req.session.cartId) {
-      return res.redirect('/');
+      return res.redirect('/menu');
     }
     
     const cart = await cartsRepo.getOne(req.session.cartId);
-    console.log('Before deletion:', cart); 
     
     const foundItem = cart.items.filter(item => req.body.productId !== item.id);
-    console.log('Found items:', foundItem); // Log the items after filtering
     
     cart.items = foundItem;
-    
-    await cartsRepo.update(req.session.cartId, { items: cart.items });
-    console.log('After deletion:', cart); // Log the cart after deletion
+    cart.total = await updateTotal(cart.items);
     
     res.redirect('/cart')
+    await cartsRepo.update(req.session.cartId, { items: cart.items });
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error');
-  }
+  }})
 });
 
 router.get('/cart/checkout', async (req, res) => {
   try {
     if (!req.session.cartId) {
-      return res.redirect('/');
+      return res.redirect('/menu');
     }
     
     const cart = await cartsRepo.getOne(req.session.cartId);
@@ -346,41 +269,35 @@ router.post('/cart/payment', async (req, res) => {
 
 //change item quantity
 router.post('/cart/change', async(req, res) => {
-  if (!req.session.cartId) {
-    return res.redirect('/');
-  }
-  const { changes } = req.body;
-  const cart = await cartsRepo.getOne(req.session.cartId);
-  const items = []
-   for (const change of changes) {
-    const { productId, quantity } = change;
-    const intQuantity = parseInt(quantity)
-   const existingItem = cart.items.find(item => item.id === productId);
-    if (existingItem) {
-      existingItem.quantity = intQuantity;
-    }    
-    items.push(existingItem);
-  } 
-  await cartsRepo.update(cart.id, { items }); 
-  async function updateTotal(cartItems) {
-    const productsPromises = cartItems.map(async (item) => {
-      const product = await productsRepo.getOne(item.id);
-      item.product = product;
-      return item.quantity * product.price;
-    });
   
-    const quantitiesTotal = await Promise.all(productsPromises);
-    const totalPrice = quantitiesTotal.reduce((total, quantityPrice) => total + quantityPrice, 0);
-    return parseFloat(totalPrice.toFixed(2));
+  await processWithSemaphore(async () => {
+    try{  
+      if (!req.session.cartId) {
+      return res.redirect('/menu');
+      }
+    const { changes } = req.body;
+    const cart = await cartsRepo.getOne(req.session.cartId);
+    const items = {}
+    for (const change of changes) {
+      const { productId, quantity } = change;
+      const intQuantity = parseInt(quantity);
+      const existingItem = cart.items.find(item => item.id === productId);
+      if (existingItem) {
+        existingItem.quantity = intQuantity;
+      }
+      // Update the 'items' object with the existing item
+      items[productId] = existingItem;
+    }
+    
+    cart.items = Object.values(items);
+    cart.total = await updateTotal(cart.items);
+    console.log(cart);
+    res.redirect('/cart')
+    await cartsRepo.update(cart.id, cart); 
   }
-  const total = await updateTotal(cart.items);
-  
-for (let item of virProduct){
-  const product = await productsRepo.getOne(item.id)
-  item.product = product
-}
-   await cartsRepo.update(cart.id, {total}); 
-   res.redirect('/cart')
+    catch (err) {
+      res.status(500).send(err);
+    }})
 });
 
 
