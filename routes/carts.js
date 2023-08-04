@@ -268,36 +268,44 @@ router.post('/cart/payment', async (req, res) => {
 
 
 //change item quantity
-router.post('/cart/change', async(req, res) => {
-  
+router.post('/cart/change', async (req, res) => {
   await processWithSemaphore(async () => {
-    try{  
+    try {
+      
       if (!req.session.cartId) {
-      return res.redirect('/menu');
+        return res.redirect('/menu');
       }
-    const { changes } = req.body;
-    const cart = await cartsRepo.getOne(req.session.cartId);
-    const items = {}
-    for (const change of changes) {
-      const { productId, quantity } = change;
-      const intQuantity = parseInt(quantity);
-      const existingItem = cart.items.find(item => item.id === productId);
-      if (existingItem) {
-        existingItem.quantity = intQuantity;
+
+
+      const { changes } = req.body;
+      const cart = await cartsRepo.getOne(req.session.cartId);
+      const items = {};
+      
+
+      for (const change of changes) {
+        const { productId, quantity } = change;
+        const intQuantity = parseInt(quantity);
+        const existingItem = cart.items.find(item => item.id === productId);
+        if (existingItem) {
+          existingItem.quantity = intQuantity;
+        }
+        // Update the 'items' object with the existing item
+        items[productId] = existingItem;
       }
-      // Update the 'items' object with the existing item
-      items[productId] = existingItem;
-    }
-    
-    cart.items = Object.values(items);
-    cart.total = await updateTotal(cart.items);
-    console.log(cart);
-    res.redirect('/cart')
-    await cartsRepo.update(cart.id, cart); 
-  }
-    catch (err) {
+
+      cart.items = Object.values(items);
+      cart.total = await updateTotal(cart.items);
+      
+
+      // Batch update the cart in the database
+      await cartsRepo.update(cart.id, cart);
+
+      console.log(cart);
+      res.redirect('/cart');
+    } catch (err) {
       res.status(500).send(err);
-    }})
+    }
+  });
 });
 
 
