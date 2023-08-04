@@ -1,6 +1,7 @@
 const express = require('express')
 const { spawn } = require('child_process');
 
+
 const cartsRepo = require('../repositories/carts')
 const productsRepo = require('../repositories/products')
 const ordersRepo = require('../repositories/orders')
@@ -13,129 +14,122 @@ const failureTemplate = require('../views/cart/failurepage')
 
 const toastModule = require('../views/utilities/toasts')
 const runPythonEmailScript = require('./utilities/runPythonScript')
-const getRandomDate = require('./utilities/getRandomDate')
+const getRandomDate = require('./utilities/getRandomDate');
+const generateUniqueCartId = require('./utilities/getRandomId');
+const {processWithSemaphore} = require('./utilities/manageRequestsHandling');
+const {
+  checkAndRemoveInvalidItems,
+  updateTotal,
+  getProductWithCaching,
+  errorHandler,} = require('./utilities/cartUtilities');
+
+const { log } = require('console');
 
 
 
 const router = express.Router()
-// Helper function to execute Python script
 
 
-// Middleware to handle errors
-function errorHandler(err, req, res, next) {
-  console.error(err);
-  res.status(500).send('Internal Server Error');
-}
 
 router.use(errorHandler);
 
 router.post('/cart/products', async (req, res) => {
-  try {
-    let cart;
-    if (!req.session.cartId) {
-      cart = await cartsRepo.create({ items: [] });
-      req.session.cartId = cart.id;
-      cart.total = 0;
-    } else {
-      cart = await cartsRepo.getOne(req.session.cartId);
-    }
-    
-    
-    if (!cart) {
-      cart = await cartsRepo.create({ items: [] });
-      req.session.cartId = cart.id;
-      cart.total = 0;
-    }
-    
-    const existingItem = cart.items.find(item => item.id === req.body.productId);
-    if (existingItem) {
-      existingItem.quantity++;
-    } else {
-      cart.items.push({ id: req.body.productId, quantity: 1 });
-    }
-    
-    await cartsRepo.update(cart.id, { items: cart.items });
-    let total = 0
-     for (let item in cart.items){
-      total += await cart.items[item].quantity
-    }
+  await processWithSemaphore(async () => {
+    try {
+      const cartId = req.session.cartId || generateUniqueCartId;
 
-    const successToast = toastModule.success({ message: 'Added To Cart' });
-    res.send({successToast, total});
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
+      req.session.cartId = cartId
+      let cart = await cartsRepo.getOne(cartId);
+
+      if (!cart) {
+        cart = await cartsRepo.create({
+          items: [{ id: null, quantity: 0 }],
+          total: 0,
+          id: cartId,
+        });
+        console.log('Cart created');
+      }
+
+      if (!Array.isArray(cart.items)) {
+        cart.items = [];
+      }
+  
+      // Check if the product already exists in the cart
+      const existingItem = cart.items.find((item) => item?.id === req.body.productId);
+      if (existingItem) {
+        existingItem.quantity++;
+      } else {
+        cart.items.push({ id: req.body.productId, quantity: 1 });
+      }
+
+      cart.total = await updateTotal(cart.items);
+      console.log('Total price:', cart.total);
+      log('hi')
+      const successToast = toastModule.success({ message: 'Added To Cart' });
+      const quantity = cart.items.length;
+
+      res.send({ successToast, quantity });
+
+      await cartsRepo.update(cart.id, cart);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal Server Error');
+    }
+  });
 });
 
-// receive a get request to  show all items in cart
+
 
 router.get('/cart', async (req, res) => {
-  try {
-    if (!req.session.cartId) {
-      cart = await cartsRepo.create({ items: [] });
-      req.session.cartId = cart.id;
-      cart.total = 0;
-    } else {
-      cart = await cartsRepo.getOne(req.session.cartId);
-    }
-    
-    if (!req.session.cartId) {
-      return res.redirect('/');
-    } 
   
-    for (let item of cart.items) {
-      const product = await productsRepo.getOne(item.id);
-      item.product = product;
-      
+  try {
+    const cartId = req.session.cartId || generateUniqueCartId
+    req.session.cartId = cartId
+    let cart = await cartsRepo.getOne(cartId);
+    if (!cart) {
+      cart = await cartsRepo.create({
+        items: [{ id: null, quantity: 0 }],
+        total: 0,
+        id: cartId,
+      });
+      console.log('Cart created');
     }
-    
-    const totalPrice = cart.items.reduce((total, item) => {
-      let quantity = item.product ? item.product.price * item.quantity : 0;
-      total = total + quantity;
-      
-      return parseFloat(total.toFixed(2))
-    }, 0);
-    
-    await cartsRepo.update(cart.id, { total: totalPrice });
-    
-    res.send(cartShowTemplate({ items: cart.items, totalPrice }));
+    checkAndRemoveInvalidItems(cart)
+    cart.total = await updateTotal(cart.items);
+    res.send(cartShowTemplate({ items: cart.items, totalPrice:cart.total }));
+    await cartsRepo.update(cart.id, cart);
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// delete item
 
 router.post('/cart/deleteItem', async (req, res) => {
-  try {
+  await processWithSemaphore(async () => { try {
     if (!req.session.cartId) {
-      return res.redirect('/');
+      return res.redirect('/menu');
     }
     
     const cart = await cartsRepo.getOne(req.session.cartId);
-    console.log('Before deletion:', cart); // Log the cart before deletion
     
     const foundItem = cart.items.filter(item => req.body.productId !== item.id);
-    console.log('Found items:', foundItem); // Log the items after filtering
     
     cart.items = foundItem;
-    
-    await cartsRepo.update(req.session.cartId, { items: cart.items });
-    console.log('After deletion:', cart); // Log the cart after deletion
+    cart.total = await updateTotal(cart.items);
     
     res.redirect('/cart')
+    await cartsRepo.update(req.session.cartId, { items: cart.items });
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error');
-  }
+  }})
 });
 
 router.get('/cart/checkout', async (req, res) => {
   try {
     if (!req.session.cartId) {
-      return res.redirect('/');
+      return res.redirect('/menu');
     }
     
     const cart = await cartsRepo.getOne(req.session.cartId);
@@ -273,54 +267,45 @@ router.post('/cart/payment', async (req, res) => {
 
 
 
-
-
-
 //change item quantity
-router.post('/cart/change', async(req, res) => {
-  if (!req.session.cartId) {
-    return res.redirect('/');
-  }
-  const { changes } = req.body;
-  const cart = await cartsRepo.getOne(req.session.cartId);
-  const items = []
-   for (const change of changes) {
-    const { productId, quantity } = change;
-    const intQuantity = parseInt(quantity)
-   const existingItem = cart.items.find(item => item.id === productId);
-    if (existingItem) {
-      existingItem.quantity = intQuantity;
-    }    
-    items.push(existingItem);
-  } 
-  await cartsRepo.update(cart.id, { items }); 
+router.post('/cart/change', async (req, res) => {
+  await processWithSemaphore(async () => {
+    try {
+      
+      if (!req.session.cartId) {
+        return res.redirect('/menu');
+      }
 
-  const virProduct = cart.items
-  async function updateTotal() {
-    for (let item of virProduct){
-      const product = await productsRepo.getOne(item.id)
-      item.product = product
+
+      const { changes } = req.body;
+      const cart = await cartsRepo.getOne(req.session.cartId);
+      const items = {};
+      
+
+      for (const change of changes) {
+        const { productId, quantity } = change;
+        const intQuantity = parseInt(quantity);
+        const existingItem = cart.items.find(item => item.id === productId);
+        if (existingItem) {
+          existingItem.quantity = intQuantity;
+        }
+        // Update the 'items' object with the existing item
+        items[productId] = existingItem;
+      }
+
+      cart.items = Object.values(items);
+      cart.total = await updateTotal(cart.items);
+      
+
+      // Batch update the cart in the database
+      await cartsRepo.update(cart.id, cart);
+
+      console.log(cart);
+      res.redirect('/cart');
+    } catch (err) {
+      res.status(500).send(err);
     }
-    const totalPrice = virProduct.reduce(async(total, item) =>{
-      
-      let quantityPrice = await item.quantity *  item.product.price
-     
-      total = await  total + quantityPrice
-
-      return parseFloat(total.toFixed(2))
-      
-  }, 0)
-
-  return totalPrice
-}
- 
-const total = await updateTotal()
-for (let item of virProduct){
-  const product = await productsRepo.getOne(item.id)
-  item.product = product
-}
-   await cartsRepo.update(cart.id, {total}); 
-   res.redirect('/cart')
+  });
 });
 
 
