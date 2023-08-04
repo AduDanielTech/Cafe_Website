@@ -13,6 +13,30 @@ const bookRouter = require('./routes/book');
 const app = express();
 
 
+const path = require('path');
+const mime = require('mime')
+
+//
+app.get('*.js', (req, res, next) => {
+  res.type('application/javascript');
+  next();
+});
+
+
+app.get('*.css', (req, res, next) => {
+  res.type('text/css');
+  next();
+});
+
+
+app.get('*.(png|jpg|jpeg|gif|ico)', (req, res, next) => {
+  const filePath = path.join(__dirname, req.url);
+  const contentType = mime.getType(filePath);
+  res.type(contentType);
+  next();
+});
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.use(express.static('public', { maxAge: '1h' }));
 app.use(bodyParser.urlencoded({ extended: true }));
