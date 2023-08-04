@@ -2,7 +2,9 @@
   "name": "ecomm",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {
+  "engines": {
+    "node": "14.x"
+  },  "scripts": {
     "start": "node index.js",
     "dev": "nodemon --inspect index.js",
     "test": "jest"
