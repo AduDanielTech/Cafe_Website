@@ -94,8 +94,8 @@ module.exports = () => {
                 <div class="col-lg-6 about-us-header">
                     <h5 class="section-title ff-secondary text-start text-custom fw-normal">About Us</h5>
                     <h1 class="mb-4"><div>Welcome to</div> <i class="fa fa-utensils text-custom me-2"></i><div>The Gourmet Griddle</div></h1>
-                    <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit, sed stet lorem sit.</p>
-                    <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet</p>
+                    <p class="mb-4"> where culinary artistry meets warm hospitality! Our journey began with a passion for crafting exquisite flavors and a commitment to providing a memorable dining experience for every guest that walks through our doors. Our diverse menu celebrates the harmonious blend of tastes from around the world, offering sizzling beef patties, mouthwatering pizzas, hearty burgers, fluffy pancakes, and more.</p>
+                    <p class="mb-4"> where skilled chefs craft culinary masterpieces using quality ingredients. Our cozy ambiance is perfect for gathering with friends and family to indulge in delectable dishes and create lasting memories. Join us for a delightful culinary adventure and savor the flavors that make our cafe store a true delight for all. Bon appétit!</p>
                     <div class="row g-4 mb-4">
                         <div class="col-sm-6">
                             <div class="d-flex align-items-center border-start border-5 border-custom px-3">
