@@ -93,7 +93,7 @@ module.exports = () => {
                 </div>
                 <div class="col-lg-6 about-us-header">
                     <h5 class="section-title ff-secondary text-start text-custom fw-normal">About Us</h5>
-                    <h1 class="mb-4"><div>Welcome to</div> <i class="fa fa-utensils text-custom me-2"></i><div>Restoran</div></h1>
+                    <h1 class="mb-4"><div>Welcome to</div> <i class="fa fa-utensils text-custom me-2"></i><div>The Gourmet Griddle</div></h1>
                     <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit, sed stet lorem sit.</p>
                     <p class="mb-4">Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna dolore erat amet</p>
                     <div class="row g-4 mb-4">
