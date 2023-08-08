@@ -17,7 +17,7 @@ module.exports = () => {
                         Delicious Meal
                     </h2>
                     <p class="lead">
-                        Lorem ipsum, dolor sit amet consectetur adipisicing elit. Obcaecati, sit eveniet aut quo esse ducimus dolorem unde, aliquam illo consectetur enim delectus temporibus, ipsum est quibusdam fugit magni non quia!
+                       Embark on a gastronomic adventure in a welcoming ambiance. Savor a symphony of flavors, crafted with passion and care. Unforgettable dining moments await you.
                     </p>
                     <a href="#" class="btn p-3 btn-light  mt3 text-light bg-custom">
                        BOOK A TABLE
