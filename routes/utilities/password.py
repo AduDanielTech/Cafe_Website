@@ -8,7 +8,7 @@ from email.message import EmailMessage
 
 # Load environment variables from .env file
 load_dotenv()
-
+print('hiiiiii')
 # Retrieve the passed JSON string
 json_string = sys.argv[1]
 my_object = json.loads(json_string)
@@ -21,7 +21,7 @@ subject = my_object['subject']
 body = my_object['message']
 
 
-print(os.environ.get('VARIABLE_NAME'))
+print(os.environ.get('EMAIL_SENDER'))
 try:
     em = EmailMessage()
     em['From'] = email_sender
