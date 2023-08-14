@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cafe Website Project</title>
 </head>
 <body>
 
-  <h1>Cafe Website Project</h1>
+  <h1>The Gourmet Griddle</h1>
+
+  <h2>Cafe Website Project </h2>
   <p>Welcome to the Cafe Website Project! This Express.js application simulates the functionality of an online cafe website. Users can explore cafe products, add items to their cart, proceed to checkout, make table reservations, and experience simulated payment processing. The project leverages technologies such as Firebase, Node.js, and Express for its backend operations.</p>
   <a href="https://cafe-website-one.vercel.app/">check out the website here</a>
 
