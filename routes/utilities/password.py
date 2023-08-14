@@ -20,6 +20,8 @@ email_receiver = my_object['email']
 subject = my_object['subject']
 body = my_object['message']
 
+
+print(os.environ.get('VARIABLE_NAME'))
 try:
     em = EmailMessage()
     em['From'] = email_sender
