@@ -17,9 +17,9 @@ module.exports= ({total}) =>{
                    <input name="card_name" type="text" class="" id="cc_name"  title="First and last name" required="required">
                </div>
                <div class="form_input">
-                   <label>Card Number</label>
-                   <input name="card-number" id="numeric-input" type="text" class="" autocomplete="off" maxlength="20" title="Credit card number" required="">
-               </div>
+               <label>Card Number</label>
+               <input name="card-number" id="numeric-input" type="number" class="" autocomplete="off" maxlength="20" title="Credit card number" required="">
+           </div>           
                <div class="form_input">
                    <label>Email</label>
                    <input name="email"  type="email" class="" autocomplete="off"  title="Email address" required="">

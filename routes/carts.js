@@ -157,7 +157,7 @@ router.get('/cart/payment-response', async (req, res) => {
       cart.items = [];
       await cartsRepo.update(req.session.cartId, { items: cart.items });
 
-      res.send(successTemplate({ msg: `We received your purchase request;<br/> we'll be in touch shortly!`,redirect:'Menu',redirect_link:'/book'  }));
+      res.send(sucessTemplate({ msg: `We received your purchase request;<br/> we'll be in touch shortly!`,redirect:'Menu',redirect_link:'/book'  }));
     } else {
       res.send(failureTemplate({ msg: `Your purchase request failed;<br/> Please try again later` }));
     }
