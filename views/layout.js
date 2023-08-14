@@ -42,7 +42,7 @@ module.exports = ({ content }) => {
       <!-- Navbar -->
       <nav class="navbar navbar-expand-md navbar-dark container-fluid">
         <div class="container ">
-            <a href="#" class="navbar-brand inflate-font">The Gourmet Griddle</a>
+            <a href="#" class="navbar-brand inflate-font">CAFE</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -125,7 +125,7 @@ module.exports = ({ content }) => {
                     <div class="copyright">
                         <div class="row">
                             <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                                &copy; <a class="border-bottom text-custom" href="#">The Gourmet Griddle</a>, All Right Reserved. 
+                                &copy; <a class="border-bottom text-custom" href="#">CAFE</a>, All Right Reserved. 
                   Designed By <a class="border-bottom text-custom" href="https://github.com/Fhejs7g">Adu Daniel</a>
                             </div>
                             <div class="col-md-6 text-center text-md-end">
