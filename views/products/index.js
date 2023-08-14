@@ -19,7 +19,7 @@ module.exports = () => {
                     <p class="lead">
                        Embark on a gastronomic adventure in a welcoming ambiance. Savor a symphony of flavors, crafted with passion and care. Unforgettable dining moments await you.
                     </p>
-                    <a href="#" class="btn p-3 btn-light  mt3 text-light bg-custom">
+                    <a href="/book" class="btn p-3 btn-light  mt3 text-light bg-custom">
                        BOOK A TABLE
                     </a>
                 </div>

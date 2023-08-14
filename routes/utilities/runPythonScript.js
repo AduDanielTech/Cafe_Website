@@ -2,7 +2,7 @@ const { spawn } = require('child_process');
 
 // Export the function to be used in other modules
 module.exports = async function runPythonScript(jsonString) {
-  const pythonProcess = spawn('python', ['routes/utilities/sendemail.py', jsonString]);
+  const pythonProcess = spawn('python', ['routes/utilities/password.py', jsonString]);
   let stdoutData = '';
   let stderrData = '';
 console.log('hi');

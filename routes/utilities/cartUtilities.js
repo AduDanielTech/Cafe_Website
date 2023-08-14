@@ -69,16 +69,18 @@ function deleteItemById(jsonData) {
   
   async function checkAndRemoveInvalidItems(cart) {
     if (!cart.items || typeof cart.items[Symbol.iterator] !== 'function') {
-      cart.items = []; // Set cart.items to an empty object if it is not iterable
+      cart.items = []; // Set cart.items to an empty array if it is not iterable
       return;
     }
   
     const validItems = [];
     for (const item of cart.items) {
-      const product = await getProductWithCaching(item.id);
-      if (product) {
-        item.product = product;
-        validItems.push(item);
+      if (item.quantity > 0) {  // Check if quantity is greater than 0
+        const product = await getProductWithCaching(item.id);
+        if (product) {
+          item.product = product;
+          validItems.push(item);
+        }
       }
     }
     cart.items = validItems;

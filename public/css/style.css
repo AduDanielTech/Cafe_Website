@@ -1098,5 +1098,33 @@ background-color: rgba(176, 176, 176, 0.2);
       .user_card_form_cont{
         padding: 0rem 0.3rem; 
       }
+      .modal-container {
+        width: 90vw;
+        padding: 1rem;
+      }
+      
+      .user_card_form {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+      
+      .checkout-btns {
+        flex-direction: column;
+        padding-bottom: 1rem;
+      }
+      
+      .checkout-btns > div {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+      
+      .card_expr_date {
+        padding: 0.5rem 0;
+        text-align: center;
+      }
+      
+      .card_date select, .CVC {
+        width: 100%;
+      }
       
   }
