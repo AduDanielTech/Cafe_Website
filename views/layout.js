@@ -42,7 +42,7 @@ module.exports = ({ content }) => {
       <!-- Navbar -->
       <nav class="navbar navbar-expand-md navbar-dark container-fluid">
         <div class="container ">
-            <a href="#" class="navbar-brand inflate-font">CAFE</a>
+            <a href="#" class="navbar-brand inflate-font">The Gourmet Griddle</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
