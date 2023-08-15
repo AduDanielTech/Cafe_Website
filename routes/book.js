@@ -57,16 +57,6 @@ router.post('/book', async (req, res) => {
     };
     // Convert the email data object to JSON string
     const jsonString = JSON.stringify(emailData);
-    try {
-      console.log('try');
-      // Call the Python helper function and handle the result
-      const pythonScriptResult = await runPythonEmailScript(jsonString);
-      console.log('Python script output:', pythonScriptResult);
-     
-    } catch (err) {
-      console.error('Error executing Python script:', err);
-      return;
-    }
     res.send(sucessTemplate({ msg: `you have been scheduled;<br/> you'll receive your details soon!`,redirect:'Book',redirect_link:'/book' })); 
 
     

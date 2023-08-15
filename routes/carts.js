@@ -232,20 +232,6 @@ router.post('/cart/payment', async (req, res) => {
 
     // Convert the email data object to JSON string
     const jsonString = JSON.stringify(emailData);
-    try {
-      // Call the Python helper function and handle the result
-      const pythonScriptResult = await runPythonEmailScript(jsonString);
-      console.log('Python script output:', pythonScriptResult);
-     
-    } catch (err) {
-     
-      console.error('Error executing Python script:', err);
-      success = false;
-     
-      res.redirect('/cart/payment-response');
-      return;
-    }
-
       cartsRepo
         .update(req.session.cartId, { userCardDetails: req.body })
         .then(() => {
