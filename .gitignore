@@ -1,4 +1,2 @@
 node_modules
-routes/utilities/password.py
-ignore.js
-routes\utilities\sendemail.py
+.env
