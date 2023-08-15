@@ -15,7 +15,6 @@
 
   const path = require('path');
 
-
   //
   app.get('*.js', (req, res, next) => {
     res.type('application/javascript');
