@@ -14,7 +14,7 @@
 
 
   const path = require('path');
-  const mime = require('mime-types');
+
 
   //
   app.get('*.js', (req, res, next) => {
@@ -29,13 +29,6 @@
   });
 
 
-  app.get('*.(png|jpg|jpeg|gif|ico)', (req, res, next) => {
-    const filePath = path.join(__dirname, req.url);
-    const contentType = mime.getType(filePath);
-    res.type(contentType);
-    next();
-  });
-  app.use(express.static(path.join(__dirname, 'public')));
 
 
   app.use(express.static('public', { maxAge: '1h' }));
