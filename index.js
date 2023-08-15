@@ -14,7 +14,7 @@
 
 
   const path = require('path');
-  const mime = require('mime')
+  const mime = require('mime-types');
 
   //
   app.get('*.js', (req, res, next) => {
