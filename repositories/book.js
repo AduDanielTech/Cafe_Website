@@ -1,6 +1,6 @@
-const Repository = require('./repository')
+
+const Repository = require('./firebaserepo');
 class BookRepository extends Repository{
 
 }
-
-module.exports = new BookRepository('book.json')
+module.exports = new BookRepository('book');
