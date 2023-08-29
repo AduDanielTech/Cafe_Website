@@ -8,7 +8,6 @@ const productsBookTemplate = require('../views/products/book');
 const sucessTemplate = require('../views/cart/sucesspage')
 const failureTemplate = require('../views/cart/failurepage')
 
-const runPythonEmailScript = require('./utilities/runPythonScript')
 
 const router = express.Router()
 
@@ -29,7 +28,7 @@ router.post('/book', async (req, res) => {
 
     const book = await BookRepository.create({ user_book_details, user_book_id: req.session.cartId });
     
-    const emailData = {
+/*     const emailData = {
       email: user_book_details.email,
       subject: ' Your Table Reservation is Confirmed!',
       message: `
@@ -54,7 +53,7 @@ router.post('/book', async (req, res) => {
       `,
     };
     // Convert the email data object to JSON string
-    const jsonString = JSON.stringify(emailData);
+    const jsonString = JSON.stringify(emailData); 
     try {
       console.log('try');
       // Call the Python helper function and handle the result
@@ -64,7 +63,7 @@ router.post('/book', async (req, res) => {
     } catch (err) {
       console.error('Error executing Python script:', err);
       return;
-    }
+    }*/
     res.send(sucessTemplate({ msg: `you have been scheduled;<br/> you'll receive your details soon!`,redirect:'Book',redirect_link:'/book' })); 
 
     

@@ -12,13 +12,11 @@ const sucessTemplate = require('../views/cart/sucesspage')
 const failureTemplate = require('../views/cart/failurepage')
 
 const toastModule = require('../views/utilities/toasts')
-const runPythonEmailScript = require('./utilities/runPythonScript')
 const getRandomDate = require('./utilities/getRandomDate')
 
 
 
 const router = express.Router()
-// Helper function to execute Python script
 
 
 // Middleware to handle errors
@@ -158,12 +156,11 @@ router.get('/cart/payment-response', async (req, res) => {
     }
 
     const cart = await cartsRepo.getOne(req.session.cartId);
-
     if (success) {
       cart.items = [];
       await cartsRepo.update(req.session.cartId, { items: cart.items });
-
-      res.send(successTemplate({ msg: `We received your purchase request;<br/> we'll be in touch shortly!`,redirect:'Menu',redirect_link:'/book'  }));
+      
+      res.send(sucessTemplate({ msg: `We received your purchase request;<br/> we'll be in touch shortly!`,redirect:'Menu',redirect_link:'/book'  }));
     } else {
       res.send(failureTemplate({ msg: `Your purchase request failed;<br/> Please try again later` }));
     }
@@ -217,44 +214,12 @@ router.post('/cart/payment', async (req, res) => {
       total: order.total.toFixed(2),
     };
 
-    // Create an email data object
-    const emailData = {
-      email: orderDetails.email,
-      subject: 'Your CAFE order has shipped',
-      message: `
-        ${orderDetails.card_name},
-        Thank you for your order from CAFE. If you have questions about your order, you can email us at ${orderDetails.email}.
-        Your shipping information is below, confirming the goods in person when receiving, non-quality issues will not be returned after unpacking. Thank you again for your patience.
-        Your Shipment # for Order ${orders.id}
-        Billing Info
-        - Card Name ${orderDetails.card_name}
-        - Address ${orderDetails.address}
-        - Email ${orderDetails.email}
-        - Products ${orderDetails.product}
-        - Date ${orderDetails.date}
-        - Total $${orderDetails.total}
-      `,
-    };
-
     // Convert the email data object to JSON string
-    const jsonString = JSON.stringify(emailData);
-    try {
-      // Call the Python helper function and handle the result
-      const pythonScriptResult = await runPythonEmailScript(jsonString);
-      console.log('Python script output:', pythonScriptResult);
-     
-    } catch (err) {
-     
-      console.error('Error executing Python script:', err);
-      success = false;
-     
-      res.redirect('/cart/payment-response');
-      return;
-    }
-
+    
       cartsRepo
         .update(req.session.cartId, { userCardDetails: req.body })
         .then(() => {
+
           res.redirect('/cart/payment-response');
         })
         .catch((err) => {

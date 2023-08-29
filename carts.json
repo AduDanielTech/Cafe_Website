@@ -163,5 +163,20 @@
     "items": [],
     "id": "675e2b7c",
     "total": 0
+  },
+  {
+    "items": [],
+    "id": "c7bb8da0",
+    "total": 0,
+    "userCardDetails": {
+      "card_name": "wdqdq",
+      "card-number": "768",
+      "email": "adudaniel097@gmail.com",
+      "address": "10,Sir Asinuga Johnson street, Lagos",
+      "cc_exp_mo": "01",
+      "cc_exp_yr": "2023",
+      "CVC": "323",
+      "total": "33"
+    }
   }
 ]

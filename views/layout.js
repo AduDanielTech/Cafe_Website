@@ -5,7 +5,7 @@ module.exports = ({ content }) => {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cafe</title>
+        <title>The Gourmet Griddle</title>
             <!-- styles -->
     
             <!-- bootstrap link -->
@@ -42,7 +42,7 @@ module.exports = ({ content }) => {
       <!-- Navbar -->
       <nav class="navbar navbar-expand-md navbar-dark container-fluid">
         <div class="container ">
-            <a href="#" class="navbar-brand inflate-font">CAFE</a>
+            <a href="#" class="navbar-brand inflate-font">The Gourmet Griddle</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -113,7 +113,7 @@ module.exports = ({ content }) => {
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <h4 class="section-title ff-secondary text-start text-custom fw-normal mb-4">Newsletter</h4>
-                            <p>Dolor amet sit justo amet elitr clita ipsum elitr est.</p>
+                            <p>Stay updated with our latest offers and news by subscribing to our newsletter.</p>
                             <div class="position-relative mx-auto" style="max-width: 400px;">
                                 <input class="form-control border-primary w-100 py-3 ps-4 pe-5" type="text" placeholder="Your email">
                                 <button type="button" class="btn bg-custom py-2 position-absolute top-0 end-0 mt-2 me-2">SignUp</button>
@@ -156,6 +156,41 @@ module.exports = ({ content }) => {
         <script src="/lib/counterup/counterup.min.js"></script>
     
         <script src="/js/main.js"></script>
+        <script >
+        (function ($) {
+            "use strict";
+            function safeExecution(callback) {
+                try {
+                  callback();
+                } catch (error) {
+                  console.error(error);
+                  // Handle the error here, e.g., display an error message to the user or log it.
+                }
+              }
+              
+              $(document).ready(function() {
+                safeExecution(function() {
+                  // updating totoal to checkouty
+              
+                  // change quantity
+                  $('.change-quantity').change(function(e) {
+                    e.preventDefault();
+                    var changes = [];
+                    $('.change-quantity').each(function() {
+                      var productId = $(this).data('product-id');
+                      var quantity = $(this).val();
+                      console.log(quantity);
+                      changes.push({ productId, quantity });
+                    });
+                    $.post('/cart/change', { changes }, function(response) {
+                      location.reload();
+                    });
+                  });
+                });
+              });
+              
+        })(jQuery);        
+        </script>
     </body>
     </html>
     `;
