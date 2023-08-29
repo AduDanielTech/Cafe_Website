@@ -7,12 +7,9 @@ const productsRouter = require('./routes/products');
 const cartsRouter = require('./routes/carts');
 const bookRouter = require('./routes/book');
 const serverless = require('serverless-http');
-const path = require('path')
 const app = express();
 
-// Serve static files from the 'dist/public' directory
-app.use(express.static('dist/public', { maxAge: '1h' }));
-
+app.use(express.static('public', { maxAge: '1h' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
   cookieSession({
@@ -24,10 +21,7 @@ app.use(adminProductsRouter);
 app.use(productsRouter);
 app.use(cartsRouter);
 app.use(bookRouter);
-
-// Set 'views' directory to 'dist/views'
-app.set('views', path.join(__dirname, 'dist/views'));
-
-app.listen(3001, () => {
-  console.log('running server on port: http://localhost:3001');
+ 
+app.listen(3000, () => {
+  console.log('running server on port: http://localhost:3000');
 });
