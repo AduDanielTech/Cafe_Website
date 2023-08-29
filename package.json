@@ -1,13 +1,14 @@
 {
   "name": "ecomm",
   "version": "1.0.0",
-  "main": "./functions/api.js",
+  "main": "index.js",
   "engines": {
     "node": "18.x"
   },
   "scripts": {
-    "start": "node ./functions/api.js",
-    "dev": "nodemon --inspect ./functions/api.js",
+    "start": "node index.js",
+    "dev": "nodemon --inspect index.js",
+    "build": "mkdirp dist && cp -R public/ dist/ && cp -R views/ dist/",
     "test": "jest"
   },
   "keywords": [],
@@ -26,6 +27,7 @@
     "netlify-lambda": "^2.0.16",
     "nodemailer": "^6.9.3",
     "nodemon": "^1.19.4",
+    "path": "^0.12.7",
     "serverless-http": "^3.2.0",
     "uglify-js": "^3.17.4"
   },
