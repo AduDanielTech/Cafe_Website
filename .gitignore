@@ -2,3 +2,5 @@ node_modules
 routes/utilities/password.py
 ignore.js
 tbxhqziybbiwturo.js
+# Local Netlify folder
+.netlify
