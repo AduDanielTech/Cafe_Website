@@ -15,19 +15,7 @@
 
   const path = require('path');
 
-  //
-  app.get('*.js', (req, res, next) => {
-    res.type('application/javascript');
-    next();
-  });
-
-
-  app.get('*.css', (req, res, next) => {
-    res.type('text/css');
-    next();
-  });
-
-
+  app.use(express.static(path.join('/public', 'public')));
 
 
   app.use(express.static('public', { maxAge: '1h' }));
