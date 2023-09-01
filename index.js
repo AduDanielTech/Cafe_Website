@@ -15,7 +15,7 @@
 
   const path = require('path');
 
-  app.use(express.static(path.join('/public', 'public')));
+  app.use(express.static(path.join('./public', 'public')));
 
 
   app.use(express.static('public', { maxAge: '1h' }));
